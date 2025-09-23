@@ -1,179 +1,367 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jogo da Memória – Financeira (2 Linhas • Standalone)</title>
+  <title>Jogo da Memória – Financeira (Tema Galáxia)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-  :root{ --bg:#eaf6ff; --glass:rgba(255,255,255,.65); --stroke:rgba(11,30,51,.12); --txt:#0b1e33; --accent:#3aa0ff; --ok:#23b18e; --no:#e64b62; --gold:#d8a928; --obj-opacity:.34; --obj-glow:.38; --obj-sat:1.12; --obj-contrast:1.06; --obj-bright:1.05 }
-  *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial;color:var(--txt);background:radial-gradient(1200px 700px at 10% -10%,#fff 0%,#f4fbff 35%,#e9f6ff 60%,#cfeaff 100%);overflow-x:hidden}
-  body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none;background:transparent url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><circle cx="1" cy="1" r="1" fill="%2373b6ff"/></svg>') repeat;opacity:.18;animation:drift 120s linear infinite;z-index:-2}
-  body::after{opacity:.10;filter:blur(.7px);animation-duration:200s}
-  @keyframes drift{from{background-position:0 0}to{background-position:4000px 3000px}}
-  #app{max-width:1100px;margin:0 auto;padding:24px;position:relative;z-index:1}
-  .screen{display:none}.screen.active{display:block}
-  .glass{background:var(--glass);border:1px solid var(--stroke);border-radius:16px;backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
-  .card{padding:24px}.card.final{max-width:720px;margin:40px auto}
-  h1{margin:4px 0 8px 0;font-size:clamp(24px,4vw,36px)} .subtitle{opacity:.9;margin-top:0}
-  .form-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0} label{font-size:.95rem}
-  input{padding:12px 14px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.9);color:var(--txt)}
-  input:focus{outline:2px solid var(--accent)} .rules{margin-top:16px} .rules summary{cursor:pointer} .rules ol{margin-left:18px}
-  .ok{color:var(--ok)} .no{color:var(--no)} .btn{appearance:none;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;color:#0b0e1a;background:#b9e8ff;font-weight:600}
-  .btn:hover{filter:brightness(.96)} .btn.primary{background:linear-gradient(135deg,#39b9ff,#6dd6ff)} .btn:disabled{opacity:.6;cursor:not-allowed}
-  .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.04);border:1px solid var(--stroke)} .hidden{display:none}
-  .hud{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:12px;margin-bottom:16px}
-  .hud .stats{display:flex;gap:16px;align-items:center} .controls{display:flex;align-items:center;gap:10px}
-  .board-wrapper{display:flex;justify-content:center}
-  /* 2 linhas (6 colunas) por padrão no desktop */
-  .board{width:min(1100px,96vw);display:grid;grid-template-columns:repeat(6,1fr);gap:12px;padding:8px}
-  @media(max-width:680px){.board{grid-template-columns:repeat(3,1fr)}}
-  .card3d{position:relative;aspect-ratio:3/4;border-radius:14px;perspective:800px;cursor:pointer}
-  .card3d .inner{position:absolute;inset:0;transition:transform .5s;transform-style:preserve-3d}
-  .card3d.flipped .inner{transform:rotateY(180deg)}
-  .face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;backface-visibility:hidden;border-radius:14px;border:1px solid var(--stroke)}
-  .face.front{background:linear-gradient(160deg,rgba(58,160,255,.18),rgba(58,160,255,.06))}
-  .face.back{transform:rotateY(180deg);background:radial-gradient(300px 180px at 25% 30%,rgba(255,255,255,.92),rgba(255,255,255,.70))}
-  .card-theme{font-size:clamp(18px,3vw,22px);font-weight:700} .card-emoji{font-size:clamp(36px,8vw,52px)}
-  .locked{outline:2px solid var(--accent)} .matched{outline:2px solid var(--ok);opacity:.98}
-  .tips{text-align:center;margin-top:10px;opacity:.9}
-  .modal{border:none;padding:0;background:transparent} .modal::backdrop{background:rgba(0,0,0,.5)} .modal-content{min-width:min(640px,92vw);padding:18px}
-  #question-title{margin:0 0 8px 0} #question-text{margin:0 0 12px 0}
-  .options{display:grid;grid-template-columns:1fr;gap:8px}
-  .option-btn{text-align:left;padding:12px;border-radius:10px;background:rgba(255,255,255,.78);color:var(--txt);border:1px solid var(--stroke);cursor:pointer}
-  .option-btn:hover{background:rgba(255,255,255,.88)} .option-btn.correct{outline:2px solid var(--ok)} .option-btn.wrong{outline:2px solid var(--no)}
-  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:10px}
-  .score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
-  .score-item{background:rgba(255,255,255,.78);padding:10px;border-radius:10px;text-align:center;border:1px solid var(--stroke)}
-  .highlight{outline:2px solid var(--gold)} .feedback{font-size:1.05rem;margin:8px 0 0 0} .final-actions{display:flex;justify-content:center;margin-top:16px}
-  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:999px;opacity:0;transition:all .25s;pointer-events:none}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  /* Objetos de fundo */
-  .bg-objects{position:fixed;inset:0;z-index:0;pointer-events:none}
-  .bg-objects .obj{position:absolute;display:block;background-repeat:no-repeat;background-size:contain;opacity:var(--obj-opacity);filter:drop-shadow(0 6px 22px rgba(58,160,255,.28)) saturate(var(--obj-sat)) contrast(var(--obj-contrast)) brightness(var(--obj-bright))}
-  .bg-objects .obj::after{content:"";position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,currentColor 0%,rgba(98,171,255,.60) 28%,rgba(98,171,255,.22) 50%,transparent 70%);filter:blur(10px);opacity:var(--obj-glow)}
-  .bg-objects .planet{color:#7ec3ff;width:180px;height:180px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><defs><radialGradient id='g' cx='50%' cy='40%' r='65%'><stop offset='0%' stop-color='%23ffffff'/><stop offset='100%' stop-color='%23a3d9ff'/></radialGradient></defs><circle cx='64' cy='64' r='36' fill='url(%23g)'/><ellipse cx='64' cy='70' rx='62' ry='18' fill='none' stroke='%237ec3ff' stroke-width='6' opacity='.85'/></svg>")}
-  .bg-objects .rocket{color:#44a2ff;width:140px;height:140px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><g fill='none' stroke='%234488ff' stroke-width='2'><path d='M64 10c22 14 30 44 18 64L64 74 46 74C34 54 42 24 64 10z' fill='%23eaf6ff'/><circle cx='64' cy='44' r='10' fill='%2399d4ff' stroke='%234488ff'/><path d='M46 74l-16 18 22-8z' fill='%2399d4ff' stroke='%234488ff'/><path d='M82 74l16 18-22-8z' fill='%2399d4ff' stroke='%234488ff'/><path d='M64 74v22' stroke='%23ff9d66'/><path d='M64 96c-6 8-18 10-18 10 8-6 8-14 8-14 2 4 10 4 10 4z' fill='%23ffd1b3' stroke='%23ff9d66'/></g></svg>")}
-  .bg-objects .ufo{color:#6bd1ff;width:160px;height:160px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><ellipse cx='64' cy='52' rx='28' ry='14' fill='%2399d4ff' opacity='.9'/><ellipse cx='64' cy='68' rx='50' ry='16' fill='%237ec3ff'/><g fill='%23eaf6ff'><circle cx='36' cy='68' r='4'/><circle cx='52' cy='68' r='4'/><circle cx='64' cy='68' r='4'/><circle cx='76' cy='68' r='4'/><circle cx='92' cy='68' r='4'/></g></svg>")}
-  .bg-objects .satellite{color:#82b6ff;width:130px;height:130px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect x='54' y='48' width='20' height='20' fill='%2399d4ff' stroke='%234488ff'/><rect x='20' y='52' width='28' height='12' fill='%23eaf6ff' stroke='%234488ff'/><rect x='80' y='52' width='28' height='12' fill='%23eaf6ff' stroke='%234488ff'/><path d='M64 48V36 M64 68v12' stroke='%234488ff'/></svg>")}
-  @keyframes float1{0%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(10px,-14px) rotate(2.2deg)}100%{transform:translate(0,0) rotate(0deg)}}
-  @keyframes float2{0%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(-12px,-10px) rotate(-2deg)}100%{transform:translate(0,0) rotate(0deg)}}
-  @keyframes float3{0%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(8px,-12px) rotate(1.6deg)}100%{transform:translate(0,0) rotate(0deg)}}
-  .planet-1{top:8%;left:5%;animation:float1 12s ease-in-out infinite}
-  .planet-2{bottom:10%;right:6%;width:130px;height:130px;animation:float2 14s ease-in-out infinite}
-  .rocket-1{top:18%;right:12%;animation:float3 11s ease-in-out infinite}
-  .ufo-1{bottom:16%;left:12%;animation:float2 15s ease-in-out infinite}
-  .sat-1{top:55%;left:48%;width:110px;height:110px;animation:float1 10.5s ease-in-out infinite}
-  @media(max-width:680px){:root{--obj-opacity:.22;--obj-glow:.24}.planet-2,.sat-1{display:none}}
-  @media(prefers-reduced-motion:reduce){.planet-1,.planet-2,.rocket-1,.ufo-1,.sat-1{animation:none}}
+    :root {
+      --bg1: #0b1020; --bg2: #121a36; --card: #1b2448; --accent: #8bf3ff; --ok: #5bd26a; --warn: #ffd166;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Color Emoji", "EmojiOne", sans-serif;
+      color: #eef2ff; background: radial-gradient(1200px 800px at 20% 10%, #1a2150 0%, #0b1020 70%), linear-gradient(180deg, var(--bg2), var(--bg1));
+      min-height: 100svh; display: grid; place-items: center; padding: 16px;
+      overflow-x: hidden;
+    }
+    main { width: min(100%, 960px); }
+    .screen { background: #0d1330a6; backdrop-filter: blur(6px); border: 1px solid #24306b; border-radius: 16px; padding: 20px; }
+    .hidden { display: none !important; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    .muted { opacity: .85; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    label { font-size: .95rem; }
+    input[type="text"] {
+      padding: 10px 12px; border-radius: 10px; border: 1px solid #2a376f; background: #0c1335; color: #e8ecff; width: 260px;
+    }
+    button {
+      background: #22307a; color: #fff; border: 1px solid #3b4cb0; padding: 10px 14px; border-radius: 12px; cursor: pointer;
+      transition: transform .06s ease, background .2s ease, box-shadow .2s ease;
+    }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    button:hover { background: #2a3aa3; box-shadow: 0 6px 20px #1b2c8c60; }
+    /* HUD e Tabuleiro */
+    .hud { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+    .counters { display: flex; gap: 12px; flex-wrap: wrap; }
+    .counter { background: #0f1744; border: 1px solid #23307a; padding: 8px 12px; border-radius: 10px; }
+    .board {
+      display: grid; gap: 10px; margin-top: 14px;
+      grid-template-columns: repeat(6, minmax(70px, 1fr));
+    }
+    @media (max-width: 700px) {
+      .board { grid-template-columns: repeat(3, minmax(80px, 1fr)); }
+    }
+    .card {
+      position: relative; height: 110px; border-radius: 14px; perspective: 1000px;
+    }
+    .card button {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      border-radius: 14px; border: 1px solid #334087; background: #121a44; font-size: 40px; line-height: 1;
+      transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease;
+    }
+    .card button:focus-visible { outline: 3px solid #78eaff; }
+    .face { position: absolute; inset: 0; display: grid; place-items: center; backface-visibility: hidden; }
+    .front { transform: rotateY(180deg); font-size: 44px; }
+    .back  { background:
+       radial-gradient(40% 60% at 30% 30%, #20308c 0%, transparent 60%),
+       radial-gradient(40% 60% at 70% 70%, #162260 0%, transparent 55%), #131a40;
+       color: #9fb6ff; font-weight: 600;
+    }
+    .is-flipped { transform: rotateY(180deg); box-shadow: 0 10px 30px #0c1a6c80; }
+    .is-matched { box-shadow: 0 0 0 2px #4bd07b inset; }
+    .tip { font-size: .95rem; color: #cfe6ff; opacity: .9; margin-top: 6px; }
+    /* Modal pergunta */
+    .modal { position: fixed; inset: 0; display: none; place-items: center; background: #0008; }
+    .modal.open { display: grid; }
+    .card-q { width: min(90vw, 720px); background: #0d1330; border: 1px solid #2b3a86; border-radius: 16px; padding: 18px; }
+    .opts { display: grid; gap: 10px; margin-top: 10px; }
+    .opt { text-align: left; }
+    .badge { padding: 2px 8px; border-radius: 999px; background: #243080; font-size: .8rem; }
   </style>
 </head>
 <body>
-  <div class="bg-objects" aria-hidden="true">
-    <span class="obj planet planet-1"></span>
-    <span class="obj planet planet-2"></span>
-    <span class="obj rocket rocket-1"></span>
-    <span class="obj ufo ufo-1"></span>
-    <span class="obj satellite sat-1"></span>
+<main>
+  <!-- TELA INICIAL -->
+  <section id="telaInicial" class="screen">
+    <h1>🌌 Jogo da Memória – Financeira</h1>
+    <p class="muted">Tema: galáxia, universo, naves, foguetes e estrelas.</p>
+
+    <div class="row" style="margin-top:10px">
+      <label>Seu nome<br/>
+        <input id="inpNome" type="text" placeholder="Ex.: Ana Souza" autocomplete="name" />
+      </label>
+      <div style="display:flex;gap:10px;align-items:flex-end">
+        <button id="btnIr" disabled>Ir para o jogo 🚀</button>
+      </div>
+    </div>
+
+    <details style="margin-top:14px">
+      <summary>🧠 Regras do Jogo</summary>
+      <ul>
+        <li>Cartas: <b>12</b> (6 pares) com elementos do universo.</li>
+        <li>Pré‑visualização: veja todas por <b>20s</b> para memorizar.</li>
+        <li>Ao formar um par, responda a <b>pergunta</b> para ganhar ponto extra.</li>
+        <li>Pontuação: <b>+2</b> por par; <b>+1</b> por resposta correta.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- TELA DE JOGO -->
+  <section id="telaJogo" class="screen hidden">
+    <div class="hud">
+      <div class="counters" aria-live="polite">
+        <div class="counter">👤 Jogador: <b id="hudNome">—</b></div>
+        <div class="counter">✅ Acertos: <b id="hudAcertos">0/6</b></div>
+        <div class="counter">🎏 Pares: <b id="hudPares">0/6</b></div>
+        <div class="counter">⭐ Pontos: <b id="hudPontos">0</b></div>
+      </div>
+      <div class="row">
+        <button id="btnPreview">👀 Pré‑visualização 20s <span id="previewTimer"></span></button>
+        <button id="btnReiniciar">🔄 Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="board" class="board" aria-label="Tabuleiro do jogo de memória"></div>
+    <p class="tip">Dica: use a pré‑visualização (20s) para memorizar as posições.</p>
+  </section>
+
+  <!-- TELA FINAL -->
+  <section id="telaFinal" class="screen hidden">
+    <h2>🌟 Resultado Final</h2>
+    <p>Jogador: <b id="outNome">—</b></p>
+    <div class="row" style="gap:16px; margin: 8px 0">
+      <span class="badge">✅ Acertos: <b id="outAcertos">0/6</b></span>
+      <span class="badge">🎏 Pares: <b id="outPares">0/6</b></span>
+      <span class="badge">⭐ Pontos totais: <b id="outPontos">0</b></span>
+    </div>
+    <button id="btnAgain">Jogar novamente 🔁</button>
+  </section>
+</main>
+
+<!-- Modal Pergunta -->
+<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+  <div class="card-q">
+    <h3 id="qTitle">🧩 Pergunta</h3>
+    <p id="qText"></p>
+    <div id="qOpts" class="opts"></div>
   </div>
+</div>
 
-  <div id="app">
-    <section id="start-screen" class="screen active">
-      <div class="card glass">
-        <h1>🌌 Jogo da Memória – Financeira</h1>
-        <p class="subtitle">Tema: Galáxia, universo, naves, foguetes e estrelas</p>
-        <form id="player-form" class="form-grid">
-          <label>Seu nome
-            <input id="player-name" type="text" placeholder="Digite seu nome" required />
-          </label>
-          <label>CPF
-            <input id="player-cpf" type="text" inputmode="numeric" placeholder="000.000.000-00" required />
-          </label>
-          <button class="btn primary" type="submit">Ir para o jogo 🚀</button>
-        </form>
-        <details class="rules">
-          <summary>🧠 Regras do Jogo</summary>
-          <ol>
-            <li><strong>Cartas e Tema:</strong> 12 cartas com elementos do universo. Há 6 pares.</li>
-            <li><strong>Pré-visualização (20s):</strong> veja todas as cartas para memorizar.</li>
-            <li><strong>Jogada + pergunta:</strong> vire 2 cartas; formando par, responda a pergunta.</li>
-            <li><strong>Pontuação:</strong> par = +2; resposta certa = +1.</li>
-          </ol>
-        </details>
-      </div>
-    </section>
+<script>
+  // ---------- UTIL ----------
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    <section id="game-screen" class="screen">
-      <div class="card glass">
-        <div class="hud">
-          <div class="stats">
-            <span class="badge">👤 <strong id="hud-name">—</strong></span>
-            <span class="badge">✅ Acertos: <strong id="hud-correct">0</strong>/6</span>
-            <span class="badge">🎏 Pares: <strong id="hud-pairs">0</strong>/6</span>
-            <span class="badge">⭐ Pontos: <strong id="hud-score">0</strong></span>
-          </div>
-          <div class="controls">
-            <button id="btn-preview" class="btn" type="button">Pré-visualização 20s 👀</button>
-            <span id="preview-timer" class="badge hidden">20s</span>
-            <button id="btn-start" class="btn primary" type="button">Iniciar jogo ▶️</button>
-          </div>
-        </div>
-        <div class="board-wrapper"><div id="board" class="board"></div></div>
-        <p id="hint" class="tips">Dica: Você pode usar a pré-visualização (20s) para memorizar as posições.</p>
-      </div>
-    </section>
+  // ---------- ESTADO ----------
+  const EMOJIS = ["🚀","🪐","🌌","⭐","🌠","🛰️"]; // 6 pares
+  const QUESTIONS = {
+    "🚀": { q: "Você tem um salário e quer montar uma reserva de emergência. Qual a regra mais indicada?",
+            a: ["Guardar 6 a 12 meses de gastos essenciais", "Guardar 6 a 12 meses da renda total", "Investir tudo em ações de alto risco"],
+            ok: 0 },
+    "🪐": { q: "Qual é a ordem saudável de finanças pessoais?",
+            a: ["Pagar dívidas caras → montar reserva → investir objetivos", "Investir primeiro → dívidas → reserva", "Ignorar dívidas e focar em milhas"],
+            ok: 0 },
+    "🌌": { q: "O que é juros compostos?",
+            a: ["Juros sobre juros, aumentando o montante ao longo do tempo", "Um desconto aplicado só uma vez", "Taxa cobrada apenas no início"],
+            ok: 0 },
+    "⭐":  { q: "Qual exemplo de dívida 'cara' que deve ser priorizada?",
+            a: ["Cheque especial e rotativo do cartão", "Financiamento habitacional corrigido pela inflação baixa", "Empréstimo consignado com juros baixos"],
+            ok: 0 },
+    "🌠": { q: "Qual prática ajuda a não estourar o orçamento?",
+            a: ["Fazer orçamento 50-30-20 (necessidades, desejos, poupança)", "Pagar tudo no crédito sem acompanhamento", "Nunca olhar extrato"],
+            ok: 0 },
+    "🛰️": { q: "Onde manter a reserva de emergência?",
+            a: ["Produto líquido e baixo risco (ex.: Tesouro Selic, CDB alta liquidez)", "Cripto volátil", "Ações small caps"],
+            ok: 0 },
+  };
 
-    <dialog id="question-modal" class="modal"><div class="modal-content card glass">
-      <h3 id="question-title">Pergunta</h3>
-      <p id="question-text"></p>
-      <div id="options" class="options"></div>
-    </div></dialog>
+  let state;
+  function newState() {
+    const deck = [...EMOJIS, ...EMOJIS].map((icon, idx) => ({ id: idx, icon, matched: false }));
+    // Fisher–Yates
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return {
+      nome: "",
+      deck,
+      lock: false,
+      flippedIds: [],
+      pairs: 0, answersRight: 0, points: 0,
+      previewing: false, previewTimer: 0,
+      askedPairs: new Set(),
+    };
+  }
 
-    <section id="final-screen" class="screen">
-      <div class="card glass final">
-        <h2>🌟 Resultado Final</h2>
-        <p>Jogador: <strong id="final-name">—</strong></p>
-        <p>CPF: <strong id="final-cpf">—</strong></p>
-        <div class="score-grid">
-          <div class="score-item"><div>✅ Acertos</div><div><strong id="final-correct">0</strong>/6</div></div>
-          <div class="score-item"><div>🎏 Pares</div><div><strong id="final-pairs">0</strong>/6</div></div>
-          <div class="score-item highlight"><div>⭐ Pontos totais</div><div><strong id="final-score">0</strong></div></div>
-        </div>
-        <p id="final-feedback" class="feedback"></p>
-        <div class="final-actions"><button id="btn-restart" class="btn" type="button">Jogar novamente 🔄</button></div>
-      </div>
-    </section>
+  // ---------- DOM & FLUXO ----------
+  const inpNome = $("#inpNome");
+  const btnIr   = $("#btnIr");
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  </div>
+  function validateStart() { btnIr.disabled = !inpNome.value.trim(); }
+  inpNome.addEventListener("input", validateStart);
 
-  <script>
-  const THEMES=[{key:'planeta',label:'Planeta',emoji:'🪐'},{key:'estrela',label:'Estrela',emoji:'⭐'},{key:'galaxia',label:'Galáxia',emoji:'🌌'},{key:'lua',label:'Lua',emoji:'🌙'},{key:'foguete',label:'Foguete',emoji:'🚀'},{key:'buraco',label:'Buraco Negro',emoji:'🕳️'}];
-  const QUESTIONS=[{id:'q1',theme:'planeta',title:'📞 Situação',text:'Durante uma ligação feita para tratar do contrato de Juliana, quem atende é Carlos...',options:[{key:'A',text:'Confirmar apenas o nome completo de Carlos ...'},{key:'B',text:'Confirmar o nome completo de Juliana ...'},{key:'C',text:'Solicitar autorização por escrito ...'},{key:'D',text:'Confirmar o nome de Carlos e o CPF dele ...'}],correct:'B'},{id:'q2',theme:'estrela',title:'Verdadeiro ou Falso',text:'Antes de encerrar qualquer atendimento é obrigatório realizar o CAD OK?',options:[{key:'A',text:'Verdadeiro'},{key:'B',text:'Falso'}],correct:'A'},{id:'q3',theme:'galaxia',title:'Comunicação final no atendimento',text:'Qual opção representa corretamente o que deve ser informado ao cliente ao final?',options:[{key:'A',text:'Pesquisa via SMS e contatos no site/verso do carnê.'},{key:'B',text:'Retornar a ligação em até 24h.'},{key:'C',text:'Encerramento automático em 5 minutos.'},{key:'D',text:'Receberá um boleto por e-mail.'}],correct:'A'},{id:'q4',theme:'lua',title:'Detalhamento da dívida',text:'João possui a parcela 20 em atraso...',options:[{key:'A',text:'Informar contrato, produto, parcela, dias e valor.'},{key:'B',text:'Apenas registrar aceite.'},{key:'C',text:'Somente valor e contrato.'},{key:'D',text:'Só se o cliente solicitar.'}],correct:'A'},{id:'q5',theme:'foguete',title:'Ao final da negociação',text:'O que informar ao cliente?',options:[{key:'A',text:'Boleto reemitido sem consequência.'},{key:'B',text:'Contrato cancelado automaticamente.'},{key:'C',text:'Pode pagar quando quiser.'},{key:'D',text:'Pode haver ligações, juros/encargos, restrição e busca/apreensão.'}],correct:'D'},{id:'q6',theme:'buraco',title:'Confirmação de dados',text:'Quais informações devem ser confirmadas?',options:[{key:'A',text:'Nome + dado do bem.'},{key:'B',text:'Confirmar nome + 2 últimos dígitos do CPF.'},{key:'C',text:'Informar CPF e pedir nome.'},{key:'D',text:'Apenas nome.'}],correct:'B'}];
-  const SCORE_PAIR_BONUS=2; const $=s=>document.querySelector(s); const $$=s=>document.querySelectorAll(s);
-  function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a}
-  function maskCPF(v){return v.replace(/\D/g,'').slice(0,11).replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')}
-  function toast(msg,ms=2000){const t=$('#toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),ms)}
-  const state={player:{name:'',cpf:''},deck:[],started:false,previewActive:false,previewInterval:null,answeredThemes:new Set(),correctAnswers:0,pairsFound:0,score(){return this.correctAnswers+this.pairsFound*SCORE_PAIR_BONUS},selected:[],lockBoard:false};
-  function createDeck(){const map=Object.fromEntries(THEMES.map(t=>[t.key,t]));const deck=[];for(const q of QUESTIONS){for(let i=0;i<2;i++){deck.push({id:q.id+'_'+i,theme:q.theme,label:map[q.theme].label,emoji:map[q.theme].emoji,flipped:false,matched:false,el:null})}}return shuffle(deck)}
-  function renderBoard(){const board=$('#board');board.innerHTML='';state.deck.forEach(card=>{const it=document.createElement('button');it.className='card3d';it.setAttribute('aria-label',`Carta ${card.label}`);it.innerHTML=`<div class="inner"><div class="face front"><div class="card-emoji">✨</div><div class="card-theme">Memorize</div></div><div class="face back"><div class="card-emoji">${card.emoji}</div><div class="card-theme">${card.label}</div></div></div>`;it.addEventListener('click',()=>onCardClick(card));card.el=it;board.appendChild(it);});}
-  function setCardFlip(c,f){c.flipped=f;c.el.classList.toggle('flipped',f)} function setCardMatched(c){c.matched=true;c.el.classList.add('matched')}
-  function goto(id){$$('.screen').forEach(s=>s.classList.remove('active'));document.querySelector(id).classList.add('active')}
-  $('#player-cpf').addEventListener('input',e=>{e.target.value=maskCPF(e.target.value)});
-  $('#player-form').addEventListener('submit',e=>{e.preventDefault();const name=$('#player-name').value.trim();const cpf=$('#player-cpf').value.replace(/\D/g,'');if(!name){toast('Por favor, informe seu nome.');return}if(cpf.length!==11){toast('CPF inválido. Digite 11 dígitos.');return}state.player.name=name;state.player.cpf=cpf;$('#hud-name').textContent=name;setupGame();goto('#game-screen')});
-  function setupGame(){state.deck=createDeck();state.started=false;state.previewActive=false;state.answeredThemes=new Set();state.correctAnswers=0;state.pairsFound=0;state.selected=[];state.lockBoard=false;renderBoard();updateHUD();$('#hint').textContent='Dica: Você pode usar a pré-visualização (20s) para memorizar as posições antes de começar.';$('#btn-preview').disabled=false;$('#btn-start').disabled=false;$('#preview-timer').classList.add('hidden')}
-  function updateHUD(){$('#hud-correct').textContent=state.correctAnswers;$('#hud-pairs').textContent=state.pairsFound;$('#hud-score').textContent=state.score()}
-  $('#btn-preview').addEventListener('click',startPreview); $('#btn-start').addEventListener('click',startGame);
-  function startPreview(){if(state.started||state.previewActive)return;state.previewActive=true;$('#btn-preview').disabled=true;$('#btn-start').disabled=true;$('#hint').textContent='Pré-visualização em andamento: memorize as posições!';state.deck.forEach(c=>setCardFlip(c,true));let remaining=20;const badge=$('#preview-timer');badge.classList.remove('hidden');badge.textContent=remaining+'s';state.previewInterval=setInterval(()=>{remaining--;badge.textContent=remaining+'s';if(remaining<=0){clearInterval(state.previewInterval);endPreview()}},1000)}
-  function endPreview(){state.previewActive=false;$('#preview-timer').classList.add('hidden');state.deck.forEach(c=>setCardFlip(c,false));$('#hint').textContent='Pré-visualização encerrada. Clique em "Iniciar jogo" para começar!';$('#btn-start').disabled=false}
-  function startGame(){if(state.started||state.previewActive)return;state.started=true;$('#btn-preview').disabled=true;$('#btn-start').disabled=true;$('#hint').textContent='Vire duas cartas. Ao formar um par, responda a pergunta do tema!'}
-  function onCardClick(card){if(!state.started){toast('Clique em "Iniciar jogo" para começar.');return}if(state.previewActive||state.lockBoard||card.matched||card.flipped)return;setCardFlip(card,true);state.selected.push(card);if(state.selected.length===2){state.lockBoard=true;const [c1,c2]=state.selected;if(c1.theme===c2.theme&&c1.id!==c2.id){setTimeout(()=>{setCardMatched(c1);setCardMatched(c2);state.pairsFound++;updateHUD();toast('Par encontrado! +'+SCORE_PAIR_BONUS+' pontos');state.selected=[];openQuestionModal(c1.theme)},350)}else{setTimeout(()=>{setCardFlip(c1,false);setCardFlip(c2,false);state.selected=[];state.lockBoard=false},700)}}}
-  const qModal=document.getElementById('question-modal');const qTitle=document.getElementById('question-title');const qText=document.getElementById('question-text');const qOptions=document.getElementById('options');
-  function openQuestionModal(theme){if(state.answeredThemes.has(theme)){state.lockBoard=false;if(state.pairsFound===QUESTIONS.length&&state.answeredThemes.size===QUESTIONS.length){endGame()}return}const q=QUESTIONS.find(x=>x.theme===theme);if(!q){state.lockBoard=false;return}qTitle.textContent=q.title;qText.textContent=q.text;qOptions.innerHTML='';q.options.forEach(opt=>{const b=document.createElement('button');b.type='button';b.className='option-btn';b.innerHTML=`<strong>${opt.key})</strong> ${opt.text}`;b.addEventListener('click',()=>handleAnswer(q,opt.key,b));qOptions.appendChild(b)});try{qModal.showModal()}catch(e){qModal.setAttribute('open','open')}}
-  function handleAnswer(q,chosenKey){qOptions.querySelectorAll('button').forEach(b=>b.disabled=true);const correct=(chosenKey===q.correct);qOptions.querySelectorAll('button').forEach(b=>{const k=b.textContent.trim().charAt(0);if(k===q.correct)b.classList.add('correct');if(k===chosenKey&&!correct)b.classList.add('wrong')});if(correct){state.correctAnswers++;toast('Resposta correta! +1 ponto')}else{toast('Resposta incorreta.')}state.answeredThemes.add(q.theme);updateHUD();setTimeout(()=>{try{qModal.close()}catch{}state.lockBoard=false;if(state.pairsFound===QUESTIONS.length&&state.answeredThemes.size===QUESTIONS.length){setTimeout(endGame,400)}},450)}
-  function endGame(){const maskedCpf=maskCPF(state.player.cpf);$('#final-name').textContent=state.player.name;$('#final-cpf').textContent=maskedCpf;$('#final-correct').textContent=state.correctAnswers;$('#final-pairs').textContent=state.pairsFound;$('#final-score').textContent=state.score();const feedback=buildFeedback(state.correctAnswers,state.pairsFound,state.score());$('#final-feedback').textContent=feedback;goto('#final-screen')}
-  function buildFeedback(c,p,s){if(c===6&&p===6)return 'Perfeito! Você dominou as perguntas e a memória espacial. Parabéns, comandante!';if(c>=5)return 'Excelente! Ótimo domínio do conteúdo e boa estratégia de memória.';if(c>=3)return 'Bom resultado! Continue praticando para evoluir ainda mais.';return 'Você está no caminho! Revisar o conteúdo e tentar novamente vai turbinar seu desempenho.'}
-  $('#btn-restart').addEventListener('click',()=>{setupGame();goto('#game-screen')});
-  </script>
+  btnIr.addEventListener("click", () => {
+    state = newState();
+    state.nome = inpNome.value.trim();
+    $("#hudNome").textContent = state.nome;
+    go("#telaInicial", "#telaJogo");
+    renderBoard();
+    updateHUD();
+  });
+
+  $("#btnReiniciar").addEventListener("click", () => {
+    const nome = state?.nome || inpNome.value.trim();
+    state = newState();
+    state.nome = nome;
+    $("#hudNome").textContent = state.nome;
+    renderBoard(); updateHUD();
+  });
+
+  $("#btnPreview").addEventListener("click", () => preview20s());
+  $("#btnAgain").addEventListener("click", () => {
+    go("#telaFinal", "#telaInicial");
+    inpNome.focus();
+  });
+
+  function go(fromSel, toSel) {
+    $(fromSel).classList.add("hidden");
+    $(toSel).classList.remove("hidden");
+  }
+
+  function renderBoard() {
+    const board = $("#board");
+    board.innerHTML = "";
+    state.deck.forEach(card => {
+      const el = document.createElement("div");
+      el.className = "card";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Carta de memória");
+      btn.dataset.id = card.id;
+      btn.innerHTML = `
+        <div class="face back">🧠</div>
+        <div class="face front">${card.icon}</div>
+      `;
+      btn.addEventListener("click", onCardClick);
+      el.appendChild(btn);
+      board.appendChild(el);
+    });
+  }
+
+  async function preview20s() {
+    if (state.previewing) return;
+    state.previewing = true;
+    state.previewTimer = 20;
+    updatePreviewBtn();
+    const buttons = $$("#board .card button");
+    buttons.forEach(b => b.classList.add("is-flipped"));
+    const timer = setInterval(() => {
+      state.previewTimer--;
+      updatePreviewBtn();
+      if (state.previewTimer <= 0) {
+        clearInterval(timer);
+        buttons.forEach(b => b.classList.remove("is-flipped"));
+        state.previewing = false;
+        updatePreviewBtn();
+      }
+    }, 1000);
+  }
+
+  function updatePreviewBtn() {
+    $("#previewTimer").textContent = state.previewing ? ` (${state.previewTimer}s)` : "";
+    $("#btnPreview").disabled = state.previewing || state.lock;
+  }
+
+  async function onCardClick(e) {
+    if (state.lock || state.previewing) return;
+    const btn = e.currentTarget;
+    const id = +btn.dataset.id;
+    const card = state.deck.find(c => c.id === id);
+    if (card.matched) return;
+    if (state.flippedIds.includes(id)) return;
+
+    btn.classList.add("is-flipped");
+    state.flippedIds.push(id);
+
+    if (state.flippedIds.length === 2) {
+      state.lock = true;
+      const [aId, bId] = state.flippedIds;
+      const a = state.deck.find(c => c.id === aId);
+      const b = state.deck.find(c => c.id === bId);
+
+      if (a.icon === b.icon) {
+        a.matched = b.matched = true;
+        [$(`[data-id="${aId}"]`), $(`[data-id="${bId}"]`)].forEach(btn => btn.classList.add("is-matched"));
+        state.pairs++; state.points += 2; updateHUD();
+        await askQuestionFor(a.icon);
+        state.flippedIds = [];
+        state.lock = false;
+        if (state.pairs === 6) endGame();
+      } else {
+        await sleep(700);
+        [$(`[data-id="${aId}"]`), $(`[data-id="${bId}"]`)].forEach(btn => btn.classList.remove("is-flipped"));
+        state.flippedIds = [];
+        state.lock = false;
+      }
+    }
+  }
+
+  function updateHUD() {
+    $("#hudAcertos").textContent = `${state.answersRight}/6`;
+    $("#hudPares").textContent   = `${state.pairs}/6`;
+    $("#hudPontos").textContent  = `${state.points}`;
+    updatePreviewBtn();
+  }
+
+  function endGame() {
+    $("#outNome").textContent   = state.nome || "—";
+    $("#outAcertos").textContent= `${state.answersRight}/6`;
+    $("#outPares").textContent  = `${state.pairs}/6`;
+    $("#outPontos").textContent = `${state.points}`;
+    go("#telaJogo", "#telaFinal");
+  }
+
+  async function askQuestionFor(icon) {
+    if (state.askedPairs.has(icon)) return;
+    state.askedPairs.add(icon);
+
+    const data = QUESTIONS[icon];
+    if (!data) return;
+
+    const modal = $("#modal");
+    const qText = $("#qText");
+    const qOpts = $("#qOpts");
+    qText.textContent = data.q;
+    qOpts.innerHTML = "";
+
+    data.a.forEach((txt, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "opt";
+      btn.textContent = `• ${txt}`;
+      btn.addEventListener("click", () => {
+        const correto = idx === data.ok;
+        if (correto) {
+          state.answersRight++; state.points += 1;
+        }
+        closeModal();
+        updateHUD();
+      });
+      qOpts.appendChild(btn);
+    });
+
+    openModal();
+    setTimeout(() => qOpts.querySelector("button")?.focus(), 0);
+
+    function openModal() { modal.classList.add("open"); state.lock = true; }
+    function closeModal() { modal.classList.remove("open"); state.lock = false; }
+  }
+
+  // Atalhos
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape" && $("#modal").classList.contains("open")) {
+      $("#modal").classList.remove("open");
+      state.lock = false;
+      updateHUD();
+    }
+  });
+  inpNome.addEventListener("keydown", e => { if (e.key === "Enter" && !btnIr.disabled) btnIr.click(); });
+
+  // Inicial
+  validateStart();
+</script>
 </body>
 </html>
