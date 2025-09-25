@@ -30,11 +30,11 @@
           {key:'C',text:'Sim. Mas apenas o valor da parcela e o número do contrato são suficientes.'},
           {key:'D',text:'Não. O detalhamento só é necessário se o cliente solicitar.'}
         ], correct:'A' },
-        { id:'q5', theme:'foguete', title:'Ao final da negociação', text:'O que deve ser informado ao cliente ao final de uma negociação?', options:[
-          {key:'A',text:'Que o boleto será reemitido com novo vencimento sem nenhuma consequência.'},
-          {key:'B',text:'Que o contrato será cancelado automaticamente após o vencimento.'},
-          {key:'C',text:'Que o cliente poderá pagar quando quiser, sem impacto no contrato.'},
-          {key:'D',text:'Que poderá haver ligações diárias, cobrança de juros e encargos (multa de 2% e mora de até 1% ao mês), restrição ao crédito e possível busca e apreensão.'}
+        { id:'q5', theme:'foguete', title:'Ao final da negociação', text:'Qual é a principal orientação que o atendente deve passar ao cliente ao final de uma negociação?', options:[
+          {key:'A',text:'Informar que o boleto será reemitido com novo vencimento, sem qualquer consequência.'},
+          {key:'B',text:'Informar que o contrato será automaticamente cancelado após o vencimento.'},
+          {key:'C',text:'Informar que o cliente poderá pagar quando quiser, sem impacto no contrato.'},
+          {key:'D',text:'Informar de forma clara os benefícios da negociação e as consequências do não pagamento da dívida.'}
         ], correct:'D' },
         { id:'q6', theme:'buraco', title:'Confirmação de dados', text:'Quais informações devem ser confirmadas com o cliente durante o atendimento?', options:[
           {key:'A',text:'Confirmar o nome completo do cliente e um dado relacionado ao bem.'},
