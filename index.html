@@ -2,366 +2,534 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <title>Jogo da Memória – Financeira (Tema Galáxia)</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jogo da Memória – Financeira</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      --bg1: #0b1020; --bg2: #121a36; --card: #1b2448; --accent: #8bf3ff; --ok: #5bd26a; --warn: #ffd166;
+    :root{
+      /* Tema claro em azul */
+      --sky1:#eaf6ff;
+      --sky2:#cfe9ff;
+      --sky3:#b6defc;
+      --text:#12324f;         /* azul-escuro legível no claro */
+      --muted:#4b6f97;        /* azul médio para textos secundários */
+      --primary:#2b6cb0;      /* azul botão */
+      --primary-2:#1f5a99;
+      --card:#ffffff;         /* face traseira */
+      --card-front:#f4fbff;   /* face frontal */
+      --chip:#f0f7ff;
+      --border:#c9dcf3;
+      --ok:#1f9d55;
+      --err:#d64545;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Color Emoji", "EmojiOne", sans-serif;
-      color: #eef2ff; background: radial-gradient(1200px 800px at 20% 10%, #1a2150 0%, #0b1020 70%), linear-gradient(180deg, var(--bg2), var(--bg1));
-      min-height: 100svh; display: grid; place-items: center; padding: 16px;
-      overflow-x: hidden;
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial;
+      color:var(--text);
+      /* Céu azul claro com “objetos do espaço” estilizados em CSS */
+      background:
+        radial-gradient(1200px 600px at 20% 10%, var(--sky3) 0%, rgba(182,222,252,0) 60%),
+        radial-gradient(800px 400px at 80% 0%, var(--sky2) 0%, rgba(207,233,255,0) 60%),
+        linear-gradient(180deg, var(--sky1), var(--sky2));
+      min-height:100%;
+      display:flex; align-items:center; justify-content:center; padding:20px;
     }
-    main { width: min(100%, 960px); }
-    .screen { background: #0d1330a6; backdrop-filter: blur(6px); border: 1px solid #24306b; border-radius: 16px; padding: 20px; }
-    .hidden { display: none !important; }
-    h1, h2, h3 { margin: 0 0 12px; }
-    .muted { opacity: .85; }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    label { font-size: .95rem; }
-    input[type="text"] {
-      padding: 10px 12px; border-radius: 10px; border: 1px solid #2a376f; background: #0c1335; color: #e8ecff; width: 260px;
+
+    /* Camada de “estrelas” e “objetos” (planetas, foguetes) com CSS puro */
+    .space-objects::before, .space-objects::after{
+      content:""; position:fixed; inset:0; pointer-events:none;
     }
-    button {
-      background: #22307a; color: #fff; border: 1px solid #3b4cb0; padding: 10px 14px; border-radius: 12px; cursor: pointer;
-      transition: transform .06s ease, background .2s ease, box-shadow .2s ease;
+    /* Estrelas miúdas */
+    .space-objects::before{
+      background:
+        radial-gradient(1px 1px at 12% 24%, rgba(255,255,255,.9), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 34% 8%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 66% 18%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 84% 28%, rgba(255,255,255,.7), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 22% 72%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 58% 66%, rgba(255,255,255,.8), rgba(255,255,255,0) 60%),
+        radial-gradient(1px 1px at 76% 80%, rgba(255,255,255,.7), rgba(255,255,255,0) 60%);
+      opacity:.55;
     }
-    button:disabled { opacity: .6; cursor: not-allowed; }
-    button:hover { background: #2a3aa3; box-shadow: 0 6px 20px #1b2c8c60; }
-    /* HUD e Tabuleiro */
-    .hud { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
-    .counters { display: flex; gap: 12px; flex-wrap: wrap; }
-    .counter { background: #0f1744; border: 1px solid #23307a; padding: 8px 12px; border-radius: 10px; }
-    .board {
-      display: grid; gap: 10px; margin-top: 14px;
-      grid-template-columns: repeat(6, minmax(70px, 1fr));
+    /* Planeta e foguete estilizados com gradientes */
+    .space-objects::after{
+      background:
+        /* Planeta lilás */
+        radial-gradient(60px 60px at 85% 20%, #d9c2ff 20%, #b590ff 55%, rgba(0,0,0,0) 56%),
+        radial-gradient(10px 10px at 82% 16%, rgba(255,255,255,.7) 30%, rgba(255,255,255,0) 31%),
+        /* Anel do planeta */
+        radial-gradient(80px 20px at 85% 21%, rgba(255,255,255,.6) 10%, rgba(255,255,255,0) 60%),
+        /* Cometa azul */
+        radial-gradient(6px 6px at 10% 70%, #ffffff 40%, rgba(255,255,255,0) 41%),
+        linear-gradient( to right, rgba(255,255,255,.6), rgba(255,255,255,0) 60%) 0% 70% / 160px 2px no-repeat;
+      opacity:.6;
     }
-    @media (max-width: 700px) {
-      .board { grid-template-columns: repeat(3, minmax(80px, 1fr)); }
+
+    .app{width:min(1040px,100%); position:relative}
+
+    /* Telas */
+    .screen{display:none;}
+    .screen.active{display:block;}
+
+    /* Painel cartão */
+    .panel{
+      background:rgba(255,255,255,.75);
+      border:1px solid var(--border);
+      backdrop-filter: blur(6px);
+      border-radius:16px; padding:22px;
+      box-shadow: 0 6px 20px rgba(31,90,153,.1);
     }
-    .card {
-      position: relative; height: 110px; border-radius: 14px; perspective: 1000px;
+    h1{margin:0 0 8px 0; font-size:clamp(22px, 4.5vw, 32px)}
+    h2{margin:16px 0 8px 0; font-size:clamp(18px, 3vw, 24px)}
+    p,li{line-height:1.5; color:var(--muted)}
+    ul{padding-left:18px; margin:8px 0}
+
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .field{display:flex; flex-direction:column; gap:6px; min-width:220px; flex:1;}
+    label{font-weight:600; color:var(--text)}
+    input[type="text"]{
+      padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+      background:#fff; color:var(--text); outline:none; min-height:40px;
     }
-    .card button {
-      position: absolute; inset: 0; width: 100%; height: 100%;
-      border-radius: 14px; border: 1px solid #334087; background: #121a44; font-size: 40px; line-height: 1;
-      transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.7,.2,1), box-shadow .2s ease;
+    button{
+      border:0; border-radius:10px; padding:10px 14px; cursor:pointer; color:#fff;
+      background:var(--primary); transition:transform .05s ease, filter .2s ease;
+      min-height:40px;
     }
-    .card button:focus-visible { outline: 3px solid #78eaff; }
-    .face { position: absolute; inset: 0; display: grid; place-items: center; backface-visibility: hidden; }
-    .front { transform: rotateY(180deg); font-size: 44px; }
-    .back  { background:
-       radial-gradient(40% 60% at 30% 30%, #20308c 0%, transparent 60%),
-       radial-gradient(40% 60% at 70% 70%, #162260 0%, transparent 55%), #131a40;
-       color: #9fb6ff; font-weight: 600;
+    button.secondary{ background:#4a89c7; }
+    button:active{ transform:translateY(1px); }
+
+    /* HUD e tabuleiro */
+    .hud{
+      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      margin:0 0 12px 0; font-weight:600;
     }
-    .is-flipped { transform: rotateY(180deg); box-shadow: 0 10px 30px #0c1a6c80; }
-    .is-matched { box-shadow: 0 0 0 2px #4bd07b inset; }
-    .tip { font-size: .95rem; color: #cfe6ff; opacity: .9; margin-top: 6px; }
-    /* Modal pergunta */
-    .modal { position: fixed; inset: 0; display: none; place-items: center; background: #0008; }
-    .modal.open { display: grid; }
-    .card-q { width: min(90vw, 720px); background: #0d1330; border: 1px solid #2b3a86; border-radius: 16px; padding: 18px; }
-    .opts { display: grid; gap: 10px; margin-top: 10px; }
-    .opt { text-align: left; }
-    .badge { padding: 2px 8px; border-radius: 999px; background: #243080; font-size: .8rem; }
+    .chip{
+      background:var(--chip); border:1px solid var(--border); padding:8px 10px; border-radius:999px;
+      color:var(--text);
+    }
+    .board{
+      display:grid; grid-template-columns:repeat(4, minmax(80px, 1fr)); gap:12px;
+    }
+    .card{
+      position:relative; aspect-ratio:3/4; border-radius:14px; perspective:900px; cursor:pointer;
+      outline:none; border:0; background:transparent; padding:0;
+    }
+    .card.disabled{ pointer-events:none; }
+    .card-inner{
+      position:absolute; inset:0; border-radius:14px; transition:transform .5s;
+      transform-style: preserve-3d;
+    }
+    .card.flipped .card-inner{ transform: rotateY(180deg); }
+    .face{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      backface-visibility:hidden; border-radius:14px; font-size:clamp(28px,6vw,42px);
+      border:1px solid var(--border);
+    }
+    .front{ background:var(--card-front); transform: rotateY(180deg); }
+    .back{
+      background:var(--card);
+      /* pequenos elementos no verso */
+      background-image:
+        radial-gradient(circle at 30% 30%, rgba(43,108,176,.2) 0 6px, transparent 7px),
+        radial-gradient(circle at 70% 70%, rgba(26, 86, 150, .18) 0 8px, transparent 9px);
+      background-repeat:no-repeat;
+    }
+
+    dialog{
+      border:1px solid var(--border); background:#fff; color:var(--text);
+      border-radius:16px; padding:20px; width:min(560px, 94vw);
+      box-shadow: 0 10px 30px rgba(18,50,79,.25);
+    }
+    dialog::backdrop{ background:rgba(0,0,0,.25); backdrop-filter: blur(2px); }
+    .dialog-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:10px }
+    .radio{
+      display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px;
+      border:1px solid var(--border); margin:6px 0;
+      background:#f8fbff;
+    }
+    .muted{ color:var(--muted) }
+    .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+    @media (max-width:520px){
+      .board{ grid-template-columns:repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
-<main>
-  <!-- TELA INICIAL -->
-  <section id="telaInicial" class="screen">
-    <h1>🌌 Jogo da Memória – Financeira</h1>
-    <p class="muted">Tema: galáxia, universo, naves, foguetes e estrelas.</p>
+  <div class="space-objects"></div>
+  <div class="app">
+    <!-- =================== TELA INICIAL =================== -->
+    <section id="startScreen" class="screen active">
+      <div class="panel">
+        <h1>🌌 Jogo da Memória – Financeira</h1>
+        <p>Tema: Galáxia, universo, naves, foguetes e estrelas</p>
 
-    <div class="row" style="margin-top:10px">
-      <label>Seu nome<br/>
-        <input id="inpNome" type="text" placeholder="Ex.: Ana Souza" autocomplete="name" />
-      </label>
-      <div style="display:flex;gap:10px;align-items:flex-end">
-        <button id="btnIr" disabled>Ir para o jogo 🚀</button>
+        <div class="row" style="margin:12px 0 8px 0;">
+          <div class="field">
+            <label for="playerName">Seu nome</label>
+            <input id="playerName" name="playerName" type="text" placeholder="Digite seu nome" required>
+          </div>
+          <div class="row" style="gap:8px; align-self:flex-end">
+            <button class="secondary" id="previewBtn" type="button">Pré‑visualização 20s 👀</button>
+            <button id="startBtn" type="button">Ir para o jogo 🚀 🧠</button>
+          </div>
+        </div>
+        <p id="previewCountdown" class="muted" aria-live="polite" style="min-height:1.5em"></p>
+
+        <h2>Regras do Jogo</h2>
+        <ul>
+          <li>Cartas e Tema: 12 cartas com elementos do universo. Há 6 pares.</li>
+          <li>Pré‑visualização (20s): veja todas as cartas para memorizar.</li>
+          <li>Jogada + pergunta: vire 2 cartas; formando par, responda a pergunta.</li>
+          <li>Pontuação: par = +2; resposta certa = +1.</li>
+        </ul>
+        <p class="hint muted">Dica: Você pode usar a pré‑visualização (20s) para memorizar as posições.</p>
       </div>
-    </div>
+    </section>
 
-    <details style="margin-top:14px">
-      <summary>🧠 Regras do Jogo</summary>
-      <ul>
-        <li>Cartas: <b>12</b> (6 pares) com elementos do universo.</li>
-        <li>Pré‑visualização: veja todas por <b>20s</b> para memorizar.</li>
-        <li>Ao formar um par, responda a <b>pergunta</b> para ganhar ponto extra.</li>
-        <li>Pontuação: <b>+2</b> por par; <b>+1</b> por resposta correta.</li>
-      </ul>
-    </details>
-  </section>
-
-  <!-- TELA DE JOGO -->
-  <section id="telaJogo" class="screen hidden">
-    <div class="hud">
-      <div class="counters" aria-live="polite">
-        <div class="counter">👤 Jogador: <b id="hudNome">—</b></div>
-        <div class="counter">✅ Acertos: <b id="hudAcertos">0/6</b></div>
-        <div class="counter">🎏 Pares: <b id="hudPares">0/6</b></div>
-        <div class="counter">⭐ Pontos: <b id="hudPontos">0</b></div>
+    <!-- =================== TELA DE JOGO =================== -->
+    <section id="gameScreen" class="screen">
+      <div class="hud">
+        <span id="hudName" class="chip">👤 —</span>
+        <span id="hudQuiz" class="chip">✅ Acertos: 0/6</span>
+        <span id="hudPairs" class="chip">🎏 Pares: 0/6</span>
+        <span id="hudScore" class="chip">⭐ Pontos: 0</span>
       </div>
-      <div class="row">
-        <button id="btnPreview">👀 Pré‑visualização 20s <span id="previewTimer"></span></button>
-        <button id="btnReiniciar">🔄 Reiniciar</button>
+
+      <div class="row" style="margin-bottom:10px; gap:8px">
+        <button class="secondary" id="previewInGame" type="button">Pré‑visualização 20s 👀</button>
+        <span class="muted" id="countdownInGame" aria-live="polite"></span>
+        <button id="restartBtn" class="secondary" type="button" title="Reiniciar">↺ Reiniciar</button>
       </div>
-    </div>
 
-    <div id="board" class="board" aria-label="Tabuleiro do jogo de memória"></div>
-    <p class="tip">Dica: use a pré‑visualização (20s) para memorizar as posições.</p>
-  </section>
+      <div id="board" class="board" role="grid" aria-label="Cartas do jogo"></div>
+      <p class="muted" style="margin-top:8px">Pré‑visualização 20s 👀 <span id="countdownFooter" aria-live="polite">20s</span> Iniciar jogo ▶️</p>
+    </section>
 
-  <!-- TELA FINAL -->
-  <section id="telaFinal" class="screen hidden">
-    <h2>🌟 Resultado Final</h2>
-    <p>Jogador: <b id="outNome">—</b></p>
-    <div class="row" style="gap:16px; margin: 8px 0">
-      <span class="badge">✅ Acertos: <b id="outAcertos">0/6</b></span>
-      <span class="badge">🎏 Pares: <b id="outPares">0/6</b></span>
-      <span class="badge">⭐ Pontos totais: <b id="outPontos">0</b></span>
-    </div>
-    <button id="btnAgain">Jogar novamente 🔁</button>
-  </section>
-</main>
+    <!-- =================== DIÁLOGO DE PERGUNTA =================== -->
+    <dialog id="questionDlg" aria-labelledby="qTitle" aria-describedby="qText">
+      <h3 id="qTitle">Pergunta</h3>
+      <p id="qText" class="muted">Enunciado</p>
+      <form id="qForm" method="dialog">
+        <div id="qOptions"></div>
+        <div class="dialog-actions">
+          <button class="secondary" value="cancel">Pular</button>
+          <button value="ok">Responder</button>
+        </div>
+      </form>
+      <p id="qFeedback" class="muted" aria-live="polite"></p>
+    </dialog>
 
-<!-- Modal Pergunta -->
-<div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="qTitle">
-  <div class="card-q">
-    <h3 id="qTitle">🧩 Pergunta</h3>
-    <p id="qText"></p>
-    <div id="qOpts" class="opts"></div>
+    <!-- =================== RESULTADO FINAL =================== -->
+    <dialog id="resultDlg" aria-labelledby="rTitle">
+      <h3 id="rTitle">🌟 Resultado Final</h3>
+      <div class="grid-2">
+        <ul>
+          <li id="rPlayer">Jogador: —</li>
+          <li id="rPairs">🎏 Pares: 0/6</li>
+        </ul>
+        <ul>
+          <li id="rQuiz">✅ Acertos: 0/6</li>
+          <li id="rScore">⭐ Pontos totais: 0</li>
+        </ul>
+      </div>
+      <div class="dialog-actions" style="margin-top:4px">
+        <button id="playAgain" value="ok">Jogar novamente 🔄</button>
+      </div>
+    </dialog>
   </div>
-</div>
 
-<script>
-  // ---------- UTIL ----------
-  const $ = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  <script>
+    /***************
+     * STATE & DATA
+     ***************/
+    const symbols = ["🚀","🛸","🌕","🪐","☄️","🌠"]; // 6 pares
+    const questions = [
+      { text: "O que é um orçamento pessoal?",
+        options: ["Um registro do dinheiro que entra e sai", "Um tipo de investimento de alto risco", "Um empréstimo"],
+        correct: 0, feedback: "Orçamento é o acompanhamento de receitas e despesas." },
+      { text: "Juros compostos significam…",
+        options: ["Juros sobre o valor inicial apenas", "Juros sobre juros acumulados", "Igual a juros simples"],
+        correct: 1, feedback: "Nos compostos, os juros incidem sobre principal + juros acumulados." },
+      { text: "Reserva de emergência ideal é, em geral:",
+        options: ["1 mês de despesas", "3 a 6 meses de despesas", "12 meses fixos"],
+        correct: 1, feedback: "Recomendação comum: entre 3 e 6 meses de despesas." },
+      { text: "Uma dívida com juros maiores deve ser:",
+        options: ["A última a ser paga", "Priorizada para pagamento", "Ignorada"],
+        correct: 1, feedback: "Priorizar dívidas mais caras reduz o custo total." },
+      { text: "Parcelar compras sem juros…",
+        options: ["Não impacta o orçamento", "Pode comprometer o fluxo de caixa", "Sempre é melhor que à vista"],
+        correct: 1, feedback: "Mesmo sem juros, parcelas ocupam orçamento futuro." },
+      { text: "Investimento com maior risco tende a…",
+        options: ["Ter retorno garantido", "Oscilar mais e poder render mais", "Render menos que a poupança"],
+        correct: 1, feedback: "Maior risco costuma vir com maior volatilidade e potencial retorno." }
+    ];
 
-  // ---------- ESTADO ----------
-  const EMOJIS = ["🚀","🪐","🌌","⭐","🌠","🛰️"]; // 6 pares
-  const QUESTIONS = {
-    "🚀": { q: "Você tem um salário e quer montar uma reserva de emergência. Qual a regra mais indicada?",
-            a: ["Guardar 6 a 12 meses de gastos essenciais", "Guardar 6 a 12 meses da renda total", "Investir tudo em ações de alto risco"],
-            ok: 0 },
-    "🪐": { q: "Qual é a ordem saudável de finanças pessoais?",
-            a: ["Pagar dívidas caras → montar reserva → investir objetivos", "Investir primeiro → dívidas → reserva", "Ignorar dívidas e focar em milhas"],
-            ok: 0 },
-    "🌌": { q: "O que é juros compostos?",
-            a: ["Juros sobre juros, aumentando o montante ao longo do tempo", "Um desconto aplicado só uma vez", "Taxa cobrada apenas no início"],
-            ok: 0 },
-    "⭐":  { q: "Qual exemplo de dívida 'cara' que deve ser priorizada?",
-            a: ["Cheque especial e rotativo do cartão", "Financiamento habitacional corrigido pela inflação baixa", "Empréstimo consignado com juros baixos"],
-            ok: 0 },
-    "🌠": { q: "Qual prática ajuda a não estourar o orçamento?",
-            a: ["Fazer orçamento 50-30-20 (necessidades, desejos, poupança)", "Pagar tudo no crédito sem acompanhamento", "Nunca olhar extrato"],
-            ok: 0 },
-    "🛰️": { q: "Onde manter a reserva de emergência?",
-            a: ["Produto líquido e baixo risco (ex.: Tesouro Selic, CDB alta liquidez)", "Cripto volátil", "Ações small caps"],
-            ok: 0 },
-  };
+    const $ = (s, root=document) => root.querySelector(s);
+    const $$ = (s, root=document) => [...root.querySelectorAll(s)];
 
-  let state;
-  function newState() {
-    const deck = [...EMOJIS, ...EMOJIS].map((icon, idx) => ({ id: idx, icon, matched: false }));
-    // Fisher–Yates
-    for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]];
-    }
-    return {
-      nome: "",
-      deck,
-      lock: false,
-      flippedIds: [],
-      pairs: 0, answersRight: 0, points: 0,
-      previewing: false, previewTimer: 0,
-      askedPairs: new Set(),
+    const screens = {
+      start: $("#startScreen"),
+      game: $("#gameScreen"),
     };
-  }
 
-  // ---------- DOM & FLUXO ----------
-  const inpNome = $("#inpNome");
-  const btnIr   = $("#btnIr");
+    const els = {
+      name: $("#playerName"),
+      startBtn: $("#startBtn"),
+      previewBtn: $("#previewBtn"),
+      previewInGame: $("#previewInGame"),
+      previewCountdown: $("#previewCountdown"),
+      countdownInGame: $("#countdownInGame"),
+      countdownFooter: $("#countdownFooter"),
+      board: $("#board"),
+      restartBtn: $("#restartBtn"),
 
-  function validateStart() { btnIr.disabled = !inpNome.value.trim(); }
-  inpNome.addEventListener("input", validateStart);
+      // HUD
+      hudName: $("#hudName"),
+      hudPairs: $("#hudPairs"),
+      hudQuiz: $("#hudQuiz"),
+      hudScore: $("#hudScore"),
 
-  btnIr.addEventListener("click", () => {
-    state = newState();
-    state.nome = inpNome.value.trim();
-    $("#hudNome").textContent = state.nome;
-    go("#telaInicial", "#telaJogo");
-    renderBoard();
-    updateHUD();
-  });
+      // Dialogs
+      qDlg: $("#questionDlg"),
+      qText: $("#qText"),
+      qForm: $("#qForm"),
+      qOptions: $("#qOptions"),
+      qFeedback: $("#qFeedback"),
 
-  $("#btnReiniciar").addEventListener("click", () => {
-    const nome = state?.nome || inpNome.value.trim();
-    state = newState();
-    state.nome = nome;
-    $("#hudNome").textContent = state.nome;
-    renderBoard(); updateHUD();
-  });
+      rDlg: $("#resultDlg"),
+      rPlayer: $("#rPlayer"),
+      rPairs: $("#rPairs"),
+      rQuiz: $("#rQuiz"),
+      rScore: $("#rScore"),
+      playAgain: $("#playAgain"),
+    };
 
-  $("#btnPreview").addEventListener("click", () => preview20s());
-  $("#btnAgain").addEventListener("click", () => {
-    go("#telaFinal", "#telaInicial");
-    inpNome.focus();
-  });
+    const state = {
+      name: "—",
+      deck: [],
+      flipped: [],
+      lock: false,
+      pairs: 0,
+      quizRight: 0,
+      score: 0,
+      previewLeft: 0,
+      askedIndexes: new Set()
+    };
 
-  function go(fromSel, toSel) {
-    $(fromSel).classList.add("hidden");
-    $(toSel).classList.remove("hidden");
-  }
-
-  function renderBoard() {
-    const board = $("#board");
-    board.innerHTML = "";
-    state.deck.forEach(card => {
-      const el = document.createElement("div");
-      el.className = "card";
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.setAttribute("aria-label", "Carta de memória");
-      btn.dataset.id = card.id;
-      btn.innerHTML = `
-        <div class="face back">🧠</div>
-        <div class="face front">${card.icon}</div>
-      `;
-      btn.addEventListener("click", onCardClick);
-      el.appendChild(btn);
-      board.appendChild(el);
-    });
-  }
-
-  async function preview20s() {
-    if (state.previewing) return;
-    state.previewing = true;
-    state.previewTimer = 20;
-    updatePreviewBtn();
-    const buttons = $$("#board .card button");
-    buttons.forEach(b => b.classList.add("is-flipped"));
-    const timer = setInterval(() => {
-      state.previewTimer--;
-      updatePreviewBtn();
-      if (state.previewTimer <= 0) {
-        clearInterval(timer);
-        buttons.forEach(b => b.classList.remove("is-flipped"));
-        state.previewing = false;
-        updatePreviewBtn();
+    /********************
+     * UTILS & RENDERING
+     ********************/
+    function shuffle(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
       }
-    }, 1000);
-  }
-
-  function updatePreviewBtn() {
-    $("#previewTimer").textContent = state.previewing ? ` (${state.previewTimer}s)` : "";
-    $("#btnPreview").disabled = state.previewing || state.lock;
-  }
-
-  async function onCardClick(e) {
-    if (state.lock || state.previewing) return;
-    const btn = e.currentTarget;
-    const id = +btn.dataset.id;
-    const card = state.deck.find(c => c.id === id);
-    if (card.matched) return;
-    if (state.flippedIds.includes(id)) return;
-
-    btn.classList.add("is-flipped");
-    state.flippedIds.push(id);
-
-    if (state.flippedIds.length === 2) {
-      state.lock = true;
-      const [aId, bId] = state.flippedIds;
-      const a = state.deck.find(c => c.id === aId);
-      const b = state.deck.find(c => c.id === bId);
-
-      if (a.icon === b.icon) {
-        a.matched = b.matched = true;
-        [$(`[data-id="${aId}"]`), $(`[data-id="${bId}"]`)].forEach(btn => btn.classList.add("is-matched"));
-        state.pairs++; state.points += 2; updateHUD();
-        await askQuestionFor(a.icon);
-        state.flippedIds = [];
-        state.lock = false;
-        if (state.pairs === 6) endGame();
-      } else {
-        await sleep(700);
-        [$(`[data-id="${aId}"]`), $(`[data-id="${bId}"]`)].forEach(btn => btn.classList.remove("is-flipped"));
-        state.flippedIds = [];
-        state.lock = false;
-      }
+      return a;
     }
-  }
 
-  function updateHUD() {
-    $("#hudAcertos").textContent = `${state.answersRight}/6`;
-    $("#hudPares").textContent   = `${state.pairs}/6`;
-    $("#hudPontos").textContent  = `${state.points}`;
-    updatePreviewBtn();
-  }
+    function createDeck(){
+      const pairs = symbols.flatMap((sym, idx)=>[
+        { id:`${idx}-A`, pair: idx, sym },
+        { id:`${idx}-B`, pair: idx, sym },
+      ]);
+      return shuffle(pairs);
+    }
 
-  function endGame() {
-    $("#outNome").textContent   = state.nome || "—";
-    $("#outAcertos").textContent= `${state.answersRight}/6`;
-    $("#outPares").textContent  = `${state.pairs}/6`;
-    $("#outPontos").textContent = `${state.points}`;
-    go("#telaJogo", "#telaFinal");
-  }
-
-  async function askQuestionFor(icon) {
-    if (state.askedPairs.has(icon)) return;
-    state.askedPairs.add(icon);
-
-    const data = QUESTIONS[icon];
-    if (!data) return;
-
-    const modal = $("#modal");
-    const qText = $("#qText");
-    const qOpts = $("#qOpts");
-    qText.textContent = data.q;
-    qOpts.innerHTML = "";
-
-    data.a.forEach((txt, idx) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "opt";
-      btn.textContent = `• ${txt}`;
-      btn.addEventListener("click", () => {
-        const correto = idx === data.ok;
-        if (correto) {
-          state.answersRight++; state.points += 1;
-        }
-        closeModal();
-        updateHUD();
+    function renderBoard(){
+      els.board.innerHTML = "";
+      state.deck.forEach((card, index)=>{
+        const btn = document.createElement("button");
+        btn.className = "card";
+        btn.setAttribute("role","button");
+        btn.setAttribute("aria-label","Carta virada");
+        btn.dataset.index = index;
+        btn.innerHTML = `
+          <div class="card-inner">
+            <div class="face front"><span>${card.sym}</span></div>
+            <div class="face back"><span>🪐</span></div>
+          </div>`;
+        btn.addEventListener("click", ()=>onFlip(btn, index));
+        els.board.appendChild(btn);
       });
-      qOpts.appendChild(btn);
+    }
+
+    function updateHUD(){
+      els.hudName.textContent = `👤 ${state.name}`;
+      els.hudPairs.textContent = `🎏 Pares: ${state.pairs}/6`;
+      els.hudQuiz.textContent = `✅ Acertos: ${state.quizRight}/6`;
+      els.hudScore.textContent = `⭐ Pontos: ${state.score}`;
+    }
+
+    function showScreen(target){
+      $$(".screen").forEach(s=>s.classList.remove("active"));
+      target.classList.add("active");
+    }
+
+    /******************
+     * GAME MECHANICS
+     ******************/
+    function resetGame(keepName=false){
+      const oldName = state.name;
+      Object.assign(state, {
+        name: keepName ? oldName : "—",
+        deck: createDeck(),
+        flipped: [],
+        lock: false,
+        pairs: 0,
+        quizRight: 0,
+        score: 0,
+        previewLeft: 0,
+        askedIndexes: new Set()
+      });
+      renderBoard();
+      updateHUD();
+      stopPreview(); // garante que não há preview ativo
+    }
+
+    function onFlip(btn, index){
+      if(state.lock) return;
+      const card = state.deck[index];
+      if(btn.classList.contains("flipped")) return;
+
+      btn.classList.add("flipped");
+      state.flipped.push({btn,index,card});
+
+      if(state.flipped.length === 2){
+        state.lock = true;
+        const [a,b] = state.flipped;
+        if(a.card.pair === b.card.pair){
+          state.pairs++;
+          state.score += 2;
+          setTimeout(()=>{
+            a.btn.classList.add("disabled");
+            b.btn.classList.add("disabled");
+            updateHUD();
+            askQuestion().then(()=>{
+              if(state.pairs === 6){ endGame(); }
+              state.flipped = [];
+              state.lock = false;
+            });
+          }, 300);
+        }else{
+          setTimeout(()=>{
+            a.btn.classList.remove("flipped");
+            b.btn.classList.remove("flipped");
+            state.flipped = [];
+            state.lock = false;
+          }, 650);
+        }
+      }
+    }
+
+    function askQuestion(){
+      return new Promise(resolve=>{
+        // escolhe primeira não utilizada; se acabar, reaproveita aleatória
+        const available = questions.map((_,i)=>i).filter(i=>!state.askedIndexes.has(i));
+        const idx = available.length ? available[0] : Math.floor(Math.random()*questions.length);
+        state.askedIndexes.add(idx);
+        const q = questions[idx];
+
+        $("#qOptions").innerHTML = "";
+        $("#qText").textContent = q.text;
+        q.options.forEach((opt, i)=>{
+          const id = `opt${idx}_${i}`;
+          const wrap = document.createElement("label");
+          wrap.className = "radio";
+          wrap.innerHTML = `
+            <input type="radio" name="q" id="${id}" value="${i}">
+            <span>${opt}</span>
+          `;
+        $("#qOptions").appendChild(wrap);
+        });
+        $("#qFeedback").textContent = "";
+
+        els.qDlg.showModal();
+
+        els.qForm.onsubmit = (ev)=>{
+          ev.preventDefault();
+          const choice = els.qForm.querySelector('input[name="q"]:checked');
+          if(!choice){ $("#qFeedback").textContent = "Selecione uma opção."; return; }
+          const correct = Number(choice.value) === q.correct;
+          $("#qFeedback").textContent = correct
+            ? `✅ Correto! ${q.feedback}`
+            : `❌ Não é bem isso. ${q.feedback}`;
+          if(correct){
+            state.quizRight++;
+            state.score++;
+            updateHUD();
+          }
+          setTimeout(()=>{ els.qDlg.close("ok"); resolve(); }, 650);
+        };
+        els.qDlg.addEventListener("close", ()=>resolve(), { once:true });
+      });
+    }
+
+    function endGame(){
+      els.rPlayer.textContent = `Jogador: ${state.name}`;
+      els.rPairs.textContent = `🎏 Pares: ${state.pairs}/6`;
+      els.rQuiz.textContent = `✅ Acertos: ${state.quizRight}/6`;
+      els.rScore.textContent = `⭐ Pontos totais: ${state.score}`;
+      els.rDlg.showModal();
+    }
+
+    /*****************
+     * PREVIEW (20s)
+     *****************/
+    let ticker = null;
+    function startPreview(){
+      $$(".card").forEach(c=>c.classList.add("flipped"));
+      state.previewLeft = 20;
+      updateCountdownUI();
+      clearInterval(ticker);
+      ticker = setInterval(()=>{
+        state.previewLeft--;
+        updateCountdownUI();
+        if(state.previewLeft<=0){ stopPreview(); }
+      }, 1000);
+    }
+    function stopPreview(){
+      clearInterval(ticker); ticker=null;
+      $$(".card").forEach(c=>{ if(!c.classList.contains("disabled")) c.classList.remove("flipped"); });
+      state.previewLeft = 0;
+      updateCountdownUI();
+    }
+    function updateCountdownUI(){
+      const txt = state.previewLeft>0 ? `Pré‑visualização: ${state.previewLeft}s` : "";
+      $("#previewCountdown").textContent = txt;
+      $("#countdownInGame").textContent = txt;
+      $("#countdownFooter").textContent = state.previewLeft>0 ? `${state.previewLeft}s` : "20s";
+    }
+
+    /************
+     * HANDLERS
+     ************/
+    $("#previewBtn").addEventListener("click", ()=>{
+      resetGame(true);
+      showScreen(screens.game);
+      startPreview();
     });
 
-    openModal();
-    setTimeout(() => qOpts.querySelector("button")?.focus(), 0);
+    $("#previewInGame").addEventListener("click", ()=> startPreview());
 
-    function openModal() { modal.classList.add("open"); state.lock = true; }
-    function closeModal() { modal.classList.remove("open"); state.lock = false; }
-  }
-
-  // Atalhos
-  window.addEventListener("keydown", e => {
-    if (e.key === "Escape" && $("#modal").classList.contains("open")) {
-      $("#modal").classList.remove("open");
-      state.lock = false;
+    $("#startBtn").addEventListener("click", ()=>{
+      const name = $("#playerName").value.trim();
+      state.name = name || "—";
+      resetGame(true);
       updateHUD();
-    }
-  });
-  inpNome.addEventListener("keydown", e => { if (e.key === "Enter" && !btnIr.disabled) btnIr.click(); });
+      showScreen(screens.game);
+    });
 
-  // Inicial
-  validateStart();
-</script>
+    $("#restartBtn").addEventListener("click", ()=> resetGame(true));
+
+    $("#playAgain").addEventListener("click", ()=>{
+      els.rDlg.close();
+      resetGame(true);
+      showScreen(screens.start);
+    });
+
+    // boot
+    resetGame(false);
+  </script>
 </body>
 </html>
